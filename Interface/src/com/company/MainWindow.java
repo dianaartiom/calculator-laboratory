@@ -16,7 +16,7 @@ public class MainWindow extends JFrame {
     public static MainWindow getInstance() {
         return ourInstance;
     }
-    private static String widowTitle = "Calculator";
+    private static String widowTitle = "Bemol Calculator";
 
     private MainWindow() {
         super(widowTitle);

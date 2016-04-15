@@ -42,7 +42,7 @@ public class StartWidnow implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(textField1.getText().length() != 0) {
-                    textField1.setText(String.valueOf(calculator.lastChance2(textField1.getText())));
+                    textField1.setText(calculator.parse(textField1.getText()));
                 }
             }
         });

@@ -3,6 +3,8 @@ package com.company;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by diana on 4/7/16.
@@ -11,344 +13,164 @@ public class Calculator {
     /* Data definition */
     public String input;
 
-    //    /* Constructor definition */
-    public Calculator() {
-        this.input = "1+3";
-    }
-
-    private static List<Character> getSymbols2(String string) {
-        List<Character> inputSymbols=new ArrayList<Character>();
-        for(int i=0;i<string.length();i++)
-        {
-            char symbol=string.charAt(i);
-
-            if(symbol=='-' || symbol=='+' || symbol=='*' || symbol=='/' || symbol=='(' || symbol==')' || symbol=='^') {
-                inputSymbols.add(symbol);
+    public static String parse(String string) {
+        while(string.contains("+") || string.contains("*") || string.contains("/")) {
+            List<String> tempElementsList2 = getListOfElements(string);
+            List<String> tempElementsList3 = getListOfElements(string);
+            List<String> answerList = new ArrayList<>();
+            for (int i = 0; i < tempElementsList2.size(); i++) {
+                answerList.add(parseLocally(tempElementsList2.get(i)));
+                string = string.replace(tempElementsList2.get(i), answerList.get(i));
+                string = string.replace("(" + answerList.get(i) + ")", answerList.get(i));
+                tempElementsList3 = fromStringToList(string);
             }
         }
-        return inputSymbols;
+        System.out.println(string);
+        return string;
     }
 
-    private static List<String> getSymbols3(String string) {
-        List<String> inputSymbols = new ArrayList<String>();
-        for(int i=0;i<string.length();i++)
-        {
-
-            String symbol=String.valueOf(string.charAt(i));
-            if(symbol.equals("-") || symbol.equals("+") || symbol.equals("*") || symbol.equals("/") || symbol.equals("(") || symbol.equals(")") || symbol.equals("^")) {
-                inputSymbols.add(symbol);
-            }
-//            String symbol=String.valueOf(string.charAt(i));
-            else if(string.charAt(i)=='s' && string.charAt(i+1)=='q'){
-                symbol = "sqrt(";
-                string = string.substring(0, i) + string.substring(i+5);
-                inputSymbols.add(symbol);
-            }
-            else if (string.charAt(i) == 's' && string.charAt(i+1) =='i'){
-                symbol = "signInverse(";
-                inputSymbols.add(symbol);
-                string = string.substring(0, i) + string.substring(i+12);
-            }
-        }
-        return inputSymbols;
-    }
-
-    private static List<String> getOperands(String string) {
-        String[] operandsArray=string.split("\\^|\\(|\\)|\\-|\\+|\\*|\\/");
-        List<String> inputOperands=new ArrayList<String>();
-        String character;
-        int index;
-
-        for(int i=0;i<operandsArray.length;i++) {
-
-            character = operandsArray[i];
-            if (!(character.isEmpty() || Character.isLetter(character.charAt(0)))) {
-                inputOperands.add(operandsArray[i]);
-            }
-        }
-        return inputOperands;
-    }
-
-    private static void listUpdater(List<String> inputSymbols,List<String> inputOperands,int position,float result) {
-        inputSymbols.remove(position);
-        inputOperands.remove(position);
-        inputOperands.remove(position);
-        inputOperands.add(position,String.valueOf(result));
-    }
-
-    public static List<Integer> getSymbolOccurence(List<Character> inputSymbol, char character) {
-        List<Integer> result = new ArrayList<Integer>();
-        for (int i = 0; i < inputSymbol.size(); i++) {
-            if(inputSymbol.get(i) == character) {
-                result.add(i);
-            }
+    public static float computeExpresion(String number1, String number2, String sign) {
+        float result = 0.0F;
+        switch (sign) {
+            case "+":
+                result = Float.parseFloat(number1) + Float.parseFloat(number2);
+                break;
+            case "-":
+                result = Float.parseFloat(number1) - Float.parseFloat(number2);
+                break;
+            case "*":
+                result = Float.parseFloat(number1) * Float.parseFloat(number2);
+                break;
+            case "/":
+                result = Float.parseFloat(number1) / Float.parseFloat(number2);
+                break;
+            case "^":
+                result = Float.parseFloat(String.valueOf(Math.pow(Double.parseDouble(number1), Double.parseDouble(number2))));
+                break;
+            case "sqrt":
+                result = Float.parseFloat(String.valueOf(Math.sqrt(Double.parseDouble(number1))));
+                break;
         }
         return result;
     }
 
-    public static int countParanthesis(List<Character> inputSymbols, char character) {
-        int count = 0;
-        for (int i=0; i < inputSymbols.size(); i++) {
-            if(inputSymbols.get(i) == '(' || inputSymbols.get(i) == ')') {
-                count++;
-            }
-        }
-        return count;
-    }
+    public static String parseLocally(String string) { /// / ca parametru trimiti un math expresion
+        String temp;
+        List<String> listOfExpressionts = new ArrayList<>();
+        String initialString = string;
+        String signRegex = "(\\+|\\-|\\*|\\/|sqrt|\\^)";
+        String floatingPointNumber = "(([-|+])?[0-9]+\\.?[0-9]*)";
+        String pattern = floatingPointNumber + signRegex + floatingPointNumber;
 
-    private static void listUpdater(List<String> inputSymbols,List<String> inputOperands,int position, int numberOfParanthesis, float result)
-    {
-        inputSymbols.remove(position+numberOfParanthesis);
-        inputOperands.remove(position);
-        inputOperands.remove(position);
-        inputOperands.add(position,String.valueOf(result));
-    }
-    /* trial of implementation the power */
-
-    public static float lastChance2(String string) {
-        int currentPositionLeftParanthesis;
-        int currentPostinonRightParanthesis;
-        List<String> inputSymbols = getSymbols3(string); // contine absolut toate simbolurile
-        List<String> inputOperands = getOperands(string);
-        int counter = inputSymbols.size();
-        String leftParanthesis = "(";
-        String rightParanthesis = ")";
-        float operand1 = 0.0F;
-        float operand2 = 0.0F;
+        // Create a Pattern object
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(string);
         float result = 0.0F;
-        int numberOfParanthesis = 0;
-        int sizeTillNow = 0;
-        int sizeTillNowWithoutParanthesis = 0;
-
-        int lastSqrtOccurrance = 0;
-        int countSqrtOccurrance = 0;
-        int countParanthesisOccurance = 0;
-        int lastLeftParanthesisOccurance = 0;
-        int firstRightParanthesisOccurance = 0;
-        List<String> tempSublist = new ArrayList<String>();
-        List<String> symbolsTillNow = new ArrayList<String>();
-        int position = 0;
-
-        while (counter > 0) {
-            if (inputSymbols.contains("sqrt(")) {
-                for (int i = 0; i < inputSymbols.size(); i++) {
-                    if (inputSymbols.get(i).equals(leftParanthesis)) {
-                        countParanthesisOccurance += 1;
-                    } else if (inputSymbols.get(i).equals(rightParanthesis)) {
-                        firstRightParanthesisOccurance = i;
-                        break;
-                    }
-                }
-                for (int i = 0; i < inputSymbols.size(); i++) {
-                    if (inputSymbols.get(i).equals("sqrt(")) {
-                        lastSqrtOccurrance = i;
-                        countSqrtOccurrance += 1;
-                    } else if (inputSymbols.get(i).equals(rightParanthesis)) {
-                        firstRightParanthesisOccurance = i;
-                        break;
-                    }
-                }
-                symbolsTillNow = inputSymbols.subList(0, lastSqrtOccurrance); /* now is the position at which the loop stopped */
-                sizeTillNow = symbolsTillNow.size();
-                sizeTillNowWithoutParanthesis = sizeTillNow - countSqrtOccurrance; /* this is used as index for operands and signs */
-                position = sizeTillNowWithoutParanthesis + 1;
-
-                /* sublist to peform calculations on it */
-                tempSublist = inputSymbols.subList(lastSqrtOccurrance + 1, firstRightParanthesisOccurance);
-                countSqrtOccurrance += countParanthesisOccurance;
-                if (lastSqrtOccurrance + 1 == firstRightParanthesisOccurance) {
-                    result = Float.parseFloat(inputOperands.get(sizeTillNowWithoutParanthesis));
-                    inputOperands.remove(sizeTillNowWithoutParanthesis);
-                    inputOperands.add(sizeTillNowWithoutParanthesis, String.valueOf(Math.sqrt(result)));
-                    inputSymbols.remove(lastSqrtOccurrance);
-                    inputSymbols.remove(lastSqrtOccurrance);
-                    counter--;
-                    countSqrtOccurrance = 0;
-                    countParanthesisOccurance = 0;
-                    continue;
-                }
-
-                /* calculations */
-                if (tempSublist.contains("^")) {
-                    int currentPostionPower = tempSublist.indexOf("^");
-                    operand1 = Float.parseFloat(inputOperands.get(currentPostionPower + sizeTillNowWithoutParanthesis));
-                    operand2 = Float.parseFloat(inputOperands.get(currentPostionPower + 1 + sizeTillNowWithoutParanthesis));
-                    result = Float.parseFloat(String.valueOf(Math.pow(operand1, operand2)));
-                    listUpdater(inputSymbols, inputOperands, currentPostionPower + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                }
-                else if (tempSublist.contains("*") || tempSublist.contains("/")) {
-                    int currentPositionMultiplication = tempSublist.indexOf("*");
-                    int currentPositionDividation = tempSublist.indexOf("/");
-
-                    if((currentPositionMultiplication < currentPositionDividation && currentPositionMultiplication != -1) || currentPositionDividation == -1) {
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionMultiplication + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionMultiplication + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 * operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionMultiplication + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                    }
-                    else if ((currentPositionMultiplication > currentPositionDividation && currentPositionDividation != -1) || currentPositionMultiplication == -1) {
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionDividation + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionDividation + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 / operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionDividation + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                    }
-                }
-                else if (tempSublist.contains("-") || tempSublist.contains("+")) {
-                    int currentPositionSubstraction = tempSublist.indexOf("-");
-                    int currentPositionAddition = tempSublist.indexOf("+");
-
-                    if ((currentPositionSubstraction < currentPositionAddition && currentPositionSubstraction != -1) || currentPositionAddition == -1) {
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionSubstraction + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionSubstraction + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 - operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionSubstraction + sizeTillNow + 1, countParanthesisOccurance, result);
-                    } else if ((currentPositionSubstraction > currentPositionAddition && currentPositionAddition != -1) || currentPositionSubstraction == -1) {
-
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionAddition + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionAddition + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 + operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionAddition + sizeTillNowWithoutParanthesis, countParanthesisOccurance + 1, result);
-                    }
-
-                }
-                countSqrtOccurrance = 0;
-                countParanthesisOccurance = 0;
+        if(string.contains("sqrt")){
+            signRegex = "(sqrt)";
+            floatingPointNumber = "(([-|+])?[0-9]+\\.?[0-9]*)";
+            pattern = signRegex + floatingPointNumber;
+            Pattern r2 = Pattern.compile(pattern);
+            Matcher m2 = r2.matcher(string);
+            while (m2.find()) {
+                result = computeExpresion(m2.group(2), m2.group(2), m2.group(1));
+                string = string.replace(m2.group(), String.valueOf(result));
             }
-            else if (inputSymbols.contains(leftParanthesis) || inputSymbols.contains(rightParanthesis)) {
-                for (int i = 0; i < inputSymbols.size(); i++) {
-                    if (inputSymbols.get(i).equals(leftParanthesis)) {
-                        lastLeftParanthesisOccurance = i;
-                        countParanthesisOccurance += 1;
-                    } else if (inputSymbols.get(i).equals(rightParanthesis)) {
-                        firstRightParanthesisOccurance = i;
-                        break;
-                    }
-                }
-
-                if (lastLeftParanthesisOccurance + 1 == firstRightParanthesisOccurance) {
-                    inputSymbols.remove(lastLeftParanthesisOccurance);
-                    inputSymbols.remove(lastLeftParanthesisOccurance);
-                    counter--;
-                    countParanthesisOccurance = 0;
-                    continue;
-                }
-
-                symbolsTillNow = inputSymbols.subList(0, lastLeftParanthesisOccurance); /* now is the position at which the loop stopped */
-                sizeTillNow = symbolsTillNow.size();
-                sizeTillNowWithoutParanthesis = sizeTillNow - countParanthesisOccurance + 1; /* this is used as index for operands and signs */
-
-                /* sublist to peform calculations on it */
-                tempSublist = inputSymbols.subList(lastLeftParanthesisOccurance+1, firstRightParanthesisOccurance);
-
-                /* calculations */
-                if(tempSublist.contains("^")){
-                    int currentPostionPower = tempSublist.indexOf("^");
-
-                    operand1 = Float.parseFloat(inputOperands.get(currentPostionPower + sizeTillNowWithoutParanthesis));
-                    operand2 = Float.parseFloat(inputOperands.get(currentPostionPower + 1 + sizeTillNowWithoutParanthesis));
-                    result = Float.parseFloat(String.valueOf(Math.pow(operand1, operand2)));
-                    listUpdater(inputSymbols, inputOperands, currentPostionPower + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                }
-                else if (tempSublist.contains("*") || tempSublist.contains("/")) {
-                    int currentPositionMultiplication = tempSublist.indexOf("*");
-                    int currentPositionDividation = tempSublist.indexOf("/");
-
-                    if ((currentPositionMultiplication < currentPositionDividation && currentPositionMultiplication != -1) || currentPositionDividation == -1) {
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionMultiplication + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionMultiplication + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 * operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionMultiplication + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                    } else if ((currentPositionMultiplication > currentPositionDividation && currentPositionDividation != -1) || currentPositionMultiplication == -1) {
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionDividation + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionDividation + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 / operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionDividation + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                    }
-
-                } else if (tempSublist.contains("-") || tempSublist.contains("+")) {
-                    int currentPositionSubstraction = tempSublist.indexOf("-");
-                    int currentPositionAddition = tempSublist.indexOf("+");
-
-                    if ((currentPositionSubstraction < currentPositionAddition && currentPositionSubstraction != -1) || currentPositionAddition == -1) {
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionSubstraction + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionSubstraction + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 - operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionSubstraction + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                    }
-                    else if ((currentPositionSubstraction > currentPositionAddition && currentPositionAddition != -1) || currentPositionSubstraction == -1) {
-
-                        operand1 = Float.parseFloat(inputOperands.get(currentPositionAddition + sizeTillNowWithoutParanthesis));
-                        operand2 = Float.parseFloat(inputOperands.get(currentPositionAddition + 1 + sizeTillNowWithoutParanthesis));
-                        result = operand1 + operand2;
-                        listUpdater(inputSymbols, inputOperands, currentPositionAddition + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                    }
-
-                }
-            } // aici se inchide if-ul
-            else {
-                tempSublist = inputSymbols;
-                if(tempSublist.contains("^")){
-                    int currentPostionPower = tempSublist.indexOf("^");
-
-                    operand1 = Float.parseFloat(inputOperands.get(currentPostionPower + sizeTillNowWithoutParanthesis));
-                    operand2 = Float.parseFloat(inputOperands.get(currentPostionPower + 1 + sizeTillNowWithoutParanthesis));
-                    result = Float.parseFloat(String.valueOf(Math.pow(operand1, operand2)));
-                    listUpdater(inputSymbols, inputOperands, currentPostionPower + sizeTillNowWithoutParanthesis, countParanthesisOccurance, result);
-                }
-                else if(inputSymbols.contains("*") || inputSymbols.contains("/"))
-                {
-                    int currentPositionMultiplication=inputSymbols.indexOf("*");
-                    int currentPositionDividation=inputSymbols.indexOf("/");
-
-                    if((currentPositionMultiplication<currentPositionDividation && currentPositionMultiplication!=-1) || currentPositionDividation==-1)
-                    {
-                        operand1=Float.parseFloat(inputOperands.get(currentPositionMultiplication));
-                        operand2=Float.parseFloat(inputOperands.get(currentPositionMultiplication+1));
-                        result=operand1*operand2;
-                        listUpdater(inputSymbols,inputOperands,currentPositionMultiplication,result);
-                    }
-                    else if((currentPositionMultiplication>currentPositionDividation && currentPositionDividation!=-1) || currentPositionMultiplication==-1)
-                    {
-                        operand1=Float.parseFloat(inputOperands.get(currentPositionDividation));
-                        operand2=Float.parseFloat(inputOperands.get(currentPositionDividation+1));
-                        result=operand1/operand2;
-                        listUpdater(inputSymbols,inputOperands,currentPositionDividation,result);
-                    }
-                }
-                else if(inputSymbols.contains("-") || inputSymbols.contains("+"))
-                {
-                    int currentPositionSubstraction=inputSymbols.indexOf("-");
-                    int currentPositionAddition=inputSymbols.indexOf("+");
-
-                    if((currentPositionSubstraction<currentPositionAddition && currentPositionSubstraction!=-1) || currentPositionAddition==-1)
-                    {
-                        operand1=Float.parseFloat(inputOperands.get(currentPositionSubstraction));
-                        operand2=Float.parseFloat(inputOperands.get(currentPositionSubstraction+1));
-                        result=operand1-operand2;
-                        listUpdater(inputSymbols,inputOperands,currentPositionSubstraction,result);
-                    }
-                    else if((currentPositionSubstraction>currentPositionAddition && currentPositionAddition!=-1) || currentPositionSubstraction==-1)
-                    {
-
-                        operand1=Float.parseFloat(inputOperands.get(currentPositionAddition));
-                        operand2=Float.parseFloat(inputOperands.get(currentPositionAddition+1));
-                        result=operand1+operand2;
-                        listUpdater(inputSymbols,inputOperands,currentPositionAddition, currentPositionAddition, result);
-                    }
-                }
+        }
+        else {
+            while (m.find()) {
+                result = computeExpresion(m.group(1), m.group(4), m.group(3));
+                string = string.replace(m.group(), String.valueOf(result));
             }
-            countSqrtOccurrance = 0;
-            countParanthesisOccurance = 0;
-            counter--;
+            m = r.matcher(string);
         }
-        Iterator<String> iterator=inputOperands.iterator();
-        String finalResult="";
-        while(iterator.hasNext())
-        {
-            finalResult=iterator.next();
-        }
-        return Float.parseFloat(finalResult);
+        return string;
     }
 
-}
+    public static List<String> fromStringToList(String string) {
+        List<String> elementsList = new ArrayList<>();
+        Pattern pattern = Pattern.compile("((\\d*\\.\\d+)|(\\d+)|([\\+\\-\\*/\\(\\)]))");
+        Matcher m = pattern.matcher(string);
 
+        while(m.find()) {
+            elementsList.add(m.group());
+        }
+        return elementsList;
+    }
+
+    public static String checkIfSqrt(String string) {
+        String signRegex = "(sqrt)";
+        String floatingPointNumber = "(([-|+])?[0-9]+\\.?[0-9]*)";
+        String pattern = signRegex + floatingPointNumber;
+
+        // Create a Pattern object
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(string);
+
+        if(m.find())
+            return m.group();
+        else
+            return string;
+    }
+
+    public static List<String> getListOfElements(String string) {
+        String temp;
+        List<String> listOfExpressionts = new ArrayList<>();
+        String signRegex = "(\\+|\\-|\\*|\\/|sqrt|\\^)";
+        String floatingPointNumber = "(([-|+])?[0-9]+\\.?[0-9]*)";
+        String pattern = floatingPointNumber + "(" + signRegex + floatingPointNumber+ ")+";
+
+        // Create a Pattern object
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(string);
+
+        while(m.find()) {
+
+            if(string.contains("sqrt")){
+                temp = checkIfSqrt(string);
+                listOfExpressionts.add(temp);
+                string = string.replaceFirst(temp, "");
+            }
+            if(m.group().contains("^")) {
+                String signRegex1 = "(\\^)";
+                String pattern1 = floatingPointNumber  + signRegex1 + floatingPointNumber;
+                Pattern r1 = Pattern.compile(pattern1);
+                Matcher m1 = r1.matcher(m.group());
+                while (m1.find()){
+                    temp = m1.group().replace("+", "");
+                    if(m1.group().contains("+")) {
+                        temp = m1.group().replace("+", "");
+                    }
+                    listOfExpressionts.add(temp);
+                }
+            }
+            else if(m.group().contains("*") || m.group().contains("/")){
+                String signRegex2 = "(\\*|\\/|sin)";
+                String pattern2 = floatingPointNumber  + signRegex2 + floatingPointNumber;
+                Pattern r2 = Pattern.compile(pattern2);
+                Matcher m2 = r2.matcher(m.group());
+                while (m2.find()){
+                    listOfExpressionts.add(m2.group());
+                }
+            }
+            else if(m.group().contains("+") || m.group().contains("-")){
+                String signRegex3 = "(\\+|\\-)";
+                String pattern3 = floatingPointNumber  + signRegex3 + floatingPointNumber;
+                Pattern r3 = Pattern.compile(pattern3);
+                Matcher m3 = r3.matcher(m.group());
+                while (m3.find()){
+                    listOfExpressionts.add(m3.group());
+                }
+            }
+        }
+        return listOfExpressionts;
+    }
+
+    public static String fromListToString(List<String> elementsList) {
+        String temp = new String();
+        for (int i = 0; i<elementsList.size(); i++) {
+            temp += elementsList.get(i);
+        }
+        return temp;
+    }
+}
