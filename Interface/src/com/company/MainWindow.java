@@ -11,7 +11,6 @@ import java.awt.*;
 
 public class MainWindow extends JFrame {
 
-
     private static MainWindow ourInstance = new MainWindow();
     public static MainWindow getInstance() {
         return ourInstance;

@@ -20,7 +20,12 @@ public class Calculator {
             List<String> answerList = new ArrayList<>();
             for (int i = 0; i < tempElementsList2.size(); i++) {
                 answerList.add(parseLocally(tempElementsList2.get(i)));
-                string = string.replace(tempElementsList2.get(i), answerList.get(i));
+                if(tempElementsList2.get(i).startsWith("+")){
+                    string = string.replace(tempElementsList2.get(i), "+" + answerList.get(i));
+                }
+                else {
+                    string = string.replace(tempElementsList2.get(i), answerList.get(i));
+                }
                 string = string.replace("(" + answerList.get(i) + ")", answerList.get(i));
                 tempElementsList3 = fromStringToList(string);
             }

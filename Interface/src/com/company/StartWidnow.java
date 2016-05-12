@@ -46,8 +46,7 @@ public class StartWidnow implements ActionListener {
                 }
             }
         });
-
-        pow.addActionListener(new ActionListener() {
+         pow.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 textField1.setText(textField1.getText() + "^");
